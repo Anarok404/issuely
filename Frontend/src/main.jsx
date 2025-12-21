@@ -2,18 +2,18 @@ import React,{ StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router'
 import './index.css'
-import LoginPage from './components/LoginPage/LoginPage'
-import SignupPage from './components/SignupPage/SignupPage'
-import OAuthSuccess from './components/OAuth/OAuth'
-import HomePage from './components/HomePage/HomePage'
-import AboutPage from './Component/About/About'
-import Layout from './components/Layout/Layout'
-import ContactUs from "./Component/Contact/Contact"
-import ProfilePage from "./Component/Profile/Profile"
-import ReportForm from "./Component/ReportForm/ReportForm"
-import  QrScanner  from './Component/QrScanner/QrScanner'
-import IssueSearch from './Component/Issue/SearchIssue'
-import StaffDashboard from './Component/Staff_Section/Dashboard'
+import LoginPage from "./Components/LoginPage/LoginPage"
+import SignupPage from './Components/Signup/Signup'
+import OAuthSuccess from './Components/OAuth/OAuth'
+import HomePage from './Components/Home/Home'
+import AboutPage from './Components/About/About'
+import Layout from './Components/Layout/Layout'
+import ContactUs from "./Components/Contact/Contact"
+import ProfilePage from "./Components/Profile/Profile"
+import ReportForm from "./Components/ReportForm/ReportForm"
+import  QrScanner  from './Components/QrScanner/QrScanner'
+import IssueSearch from './Components/Issue/SearchIssue'
+import StaffDashboard from './Components/Staff_Section/Dashboard'
 
 const router = createBrowserRouter(
   createRoutesFromElements(

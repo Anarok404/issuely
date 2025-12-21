@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {Link} from "react-router-dom"
 import { NotificationBell } from '../Notification/Notification'
-import Logout from '../Logout/Logout'
+import Logout from '../LogoutPage/LogoutPage'
 import useAuth from "../AuthContext/AuthContextProvider"
 
 function Header() {

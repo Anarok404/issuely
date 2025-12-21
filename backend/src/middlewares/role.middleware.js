@@ -7,3 +7,10 @@ export const requireAdmin = (req, res, next) => {
 
   next();
 };
+export const requireLead = (req, res, next) => {
+  if (req.user.role !== "lead") {
+    return res.status(403).json({ message: "Lead access required" });
+  }
+
+  next();
+};

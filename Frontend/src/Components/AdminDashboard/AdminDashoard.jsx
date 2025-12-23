@@ -1,5 +1,6 @@
 import React,{ useEffect, useState } from "react";
-
+import { Link } from "react-router-dom";
+import AssignIssue from "./AssignIssue";
 
 /////////********* testing **********/
 
@@ -105,16 +106,19 @@ export default function AdminDashboard() {
 
     const filteredIssues = issues.filter(issues =>
         (!filters.status || issues.status === filters.status) &&
-        (!filters.location || issues.location === filters.location) &&
+        (!filters.location || issues.location.includes(filters.location)) &&
         (!filters.priority || issues.priority === filters.priority) 
        
     );
 
     return (
         <div className="min-h-screen bg-linear-to-br from-indigo-600 to-purple-600 p-6">
-            <h1 className="text-3xl font-bold text-white mb-6">
+            <div className="flex mb-6">
+            <h1 className="text-3xl font-bold text-white ">
                 Admin Dashboard
             </h1>
+            <h3 className=" flex text-fuchsia-400 ml-10 mt-2"><Link to="/assign">click here to assign issue to staff</Link></h3>
+            </div>
             <IssueFilters filters={filters} setFilters={setFilters} />
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -211,7 +215,7 @@ function IssueCard({ issue ,setIssues,staff}) {
   }
   return (
     <div
-      className="bg-blue-200 p-4 rounded-xl shadow hover:shadow-lg transition"
+      className="bg-blue-200 p-4 rounded-xl shadow hover:shadow-lg transition h-fit"
     >
       <div className="flex justify-between">
         <h3 className="font-semibold text-blue-600">

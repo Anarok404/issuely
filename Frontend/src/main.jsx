@@ -14,6 +14,8 @@ import ReportForm from "./Components/ReportForm/ReportForm"
 import  QrScanner  from './Components/QrScanner/QrScanner'
 import IssueSearch from './Components/Issue/SearchIssue'
 import StaffDashboard from './Components/Staff_Section/Dashboard'
+import AdminDashboard from './Components/AdminDashboard/AdminDashoard'
+import AssignIssuesPage from './Components/AdminDashboard/AssignIssue'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -29,6 +31,8 @@ const router = createBrowserRouter(
       <Route path='/qrscanner' element={<QrScanner />}/>
       <Route path='/issuesearch' element={<IssueSearch />}/>
       <Route path='/staff/issue' element={<StaffDashboard/>}/>
+      <Route path='/admin' element={<AdminDashboard/>}/>
+      <Route path='/assign' element={<AssignIssuesPage/>}/>
     </Route>
  
   )

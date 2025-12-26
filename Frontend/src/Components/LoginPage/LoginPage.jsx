@@ -12,7 +12,7 @@ export default function Login() {
   })
   const navigate = useNavigate();
 
- const {isLogin,setIsLogin,role,setRole} = useAuth();
+ const {isLogin,setIsLogin,role,setRole,setUser} = useAuth();
   const onChangeDetail = (e)=>{
     setLoginDetail(
       {
@@ -37,6 +37,7 @@ export default function Login() {
 
     if(res.ok){
       localStorage.setItem("token",data.token)
+      setUser(data);
       setIsLogin(true);
       setRole(data.role)  // res kaise aata hai us basis pe update kar denge
       navigate("/");

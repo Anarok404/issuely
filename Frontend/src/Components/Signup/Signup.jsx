@@ -13,12 +13,14 @@ export default function Signup() {
     contact: "",
     password: ""
   })
+  const[role,setRole] = useState("student");
 
   const navigate = useNavigate();
   const onChangeDetail = (e) => {
     setSignupDetail({
       ...signupDetail, [e.target.name]: e.target.value,
     })
+    setRole(e.target.value);
   }
 
   const SignupUser = async (e) => {
@@ -119,11 +121,24 @@ export default function Signup() {
           className="w-full p-2 mb-4 rounded"
         >
           <option value="">Select Department</option>
+          {role=='student' && (
+          <>
           <option value="ECE">ECE</option>
           <option value="CSE">CSE</option>
           <option value="EE">EE</option>
           <option value="PIE">PIE</option>
           <option value="MECH">MECH</option>
+          </>
+          )}
+          {role=="staff" && (
+            <>
+          <option value="Maintainance">MAINTAINTANANCE</option>
+          <option value="Electrical">ELECTRICAL</option>
+          <option value="Plumbing">PLUMBING</option>
+          <option value="Sweeper">SWEEPER</option>
+          <option value="IT">IT</option>
+            </>
+          )}
         </select>
 
 

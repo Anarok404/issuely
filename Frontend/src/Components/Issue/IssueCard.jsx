@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import useAuth from "../AuthContext/AuthContextProvider";
 import FeedbackForm from "./FeedbackForm";
+import IssueChatPage from "../ChatFeature/ChatPage";
+import { Link } from "react-router-dom";
 
 
 
 export default function IssueCard({ issue, setIssues, staff }) {
-    const { role, isLogin } = useAuth();
+    const { role, isLogin,user } = useAuth();
     console.log("issue in card", issue)
     const [isUpdate, setIsUpdate] = useState(false);
     const[reports,setReports] = useState(issue);
@@ -119,6 +121,10 @@ export default function IssueCard({ issue, setIssues, staff }) {
                     }
                 </>
             }
+            {(role=="student" || role=="staff") && isLogin && 
+            <Link to ={`/issues/:${issue._id}/chat`}>
+                chat on this issue
+            </Link>}
             {(role == "student" && (isLogin && (issue.status == 'Closed' || issue.status == 'Resolved'))) &&
                 <FeedbackForm
                     issueId={issue._id}

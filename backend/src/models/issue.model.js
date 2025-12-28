@@ -24,11 +24,11 @@ const issueSchema = new mongoose.Schema(
         },
         coordinates: {
           type: [Number], // [lng, lat]
-          required : true,
+          required: true,
         },
       },
     },
-    urgency: {
+    priority: {
       type: String,
       enum: ["low", "medium", "high"],
       default: "low",

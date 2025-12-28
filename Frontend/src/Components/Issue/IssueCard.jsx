@@ -8,59 +8,42 @@ import { Link } from "react-router-dom";
 
 export default function IssueCard({ issue, setIssues, staff }) {
     const { role, isLogin,user } = useAuth();
-    console.log("issue in card", issue)
+    console.log("issue in card", issue);
+    console.log("user in issue card",user);
     const [isUpdate, setIsUpdate] = useState(false);
     const[reports,setReports] = useState(issue);
-    const issueId = issue._id;
-    const fetchIssues = async () => {
-        // try {
-        //     const token = localStorage.getItem("token");
 
-        //     const response = await fetch("http://localhost:5000/issues", {
-        //         headers: {
-        //             Authorization: `Bearer ${token}`
-        //         }
-        //     });
+   const updateIssueStatus = async (issueId, newStatus, setIssues) => {
+          try {
+            const token = localStorage.getItem("token");
 
-        //     const data = await response.json();
-        //     setReports(data);
-        // } catch (error) {
-        //     console.error("Failed to fetch issues", error);
-        // }
-        issue = reports.find(r=>r._id==issueId);
-    };
+            const response = await fetch(`http://localhost:5000/issues/${issueId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ status: newStatus }),
+            });
 
-    const updateIssueStatus = async (issueId, newStatus, setIssues) => {
-        //   try {
-        //     const token = localStorage.getItem("token");
+            if (!response.ok) {
+              throw new Error("Failed to update issue");
+            }
 
-        //     const response = await fetch(`/issues/${issueId}`, {
-        //       method: "PATCH",
-        //       headers: {
-        //         "Content-Type": "application/json",
-        //         Authorization: `Bearer ${token}`,
-        //       },
-        //       body: JSON.stringify({ status: newStatus }),
-        //     });
-
-        //     if (!response.ok) {
-        //       throw new Error("Failed to update issue");
-        //     }
-
-        //     const updatedIssue = await response.json();
-
-
-        //     setIssues(updatedIssue);
-        //   } catch (error) {
-        //     console.error("Error updating issue:", error);
-        //     alert("Unable to update issue status");
-        //   }
-
-        setReports(prevIssues =>
-            prevIssues.map((issue) => issue._id === issueId ? { ...issue, status: newStatus } : issue))
-
-    }
-    const filteredStaff = staff.find(s => s._id == issue.assignedTo);
+            const updatedIssue = await response.json();
+            console.log("updated issue in issue card",updatedIssue);
+            setIssues(updatedIssue);
+          } catch (error) {
+            console.error("Error updating issue:", error);
+            alert("Unable to update issue status");
+          }
+   }
+   let filteredStaff;
+   if(typeof(staff)!=Array){
+    filteredStaff = staff
+   }else  {
+    filteredStaff = staff.find(s => s._id == issue.assignedTo);
+   }
 
     return (
         <div
@@ -74,22 +57,22 @@ export default function IssueCard({ issue, setIssues, staff }) {
             </div>
 
             <p className="text-gray-700 mt-2">{issue.type}</p>
-            <p className="text-sm text-gray-500">{issue.location}</p>
+            <p className="text-sm text-gray-500">{issue.location.name}</p>
             <p className="text-sm text-gray-500">Assigned to:<span className="text-red-400 font-bold">{filteredStaff ? filteredStaff.name : "Not assigned yet"}</span></p>
 
 
             <span
-                className={`inline-block mt-3 px-2 py-1 text-xs rounded ${issue.priority === "High"
+                className={`inline-block mt-3 px-2 py-1 text-xs rounded ${issue.urgency === "high"
                     ? "bg-red-100 text-red-600"
-                    : issue.priority === "Medium"
+                    : issue.urgency === "medium"
                         ? "bg-yellow-100 text-yellow-700"
                         : "bg-green-100 text-green-600"
                     }`}
             >
-                {issue.priority}
+                {issue.urgency}
             </span>
 
-            {(role != "student" && isLogin) &&
+            {(role != "student" && (isLogin && (issue.assignedTo==user.id || role=="lead"))) &&
                 <>
                     <div>
                         <button
@@ -107,10 +90,10 @@ export default function IssueCard({ issue, setIssues, staff }) {
                                 }
                                 className="border p-2 rounded m-2 bg-blue-300"
                             >
-                                <option>Assigned</option>
-                                <option>In Progress</option>
-                                <option>Resolved</option>
-                                <option>Closed</option>
+                                <option value="assigned">Assigned</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value ="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
                             </select>
                             <button
                                 className="border p-2 w-20 rounded bg-green-300 cursor-pointer hover:bg-green-500"
@@ -121,7 +104,7 @@ export default function IssueCard({ issue, setIssues, staff }) {
                     }
                 </>
             }
-            {(role=="student" || role=="staff") && (isLogin && (issue.createdBy==user.id || issue.assignedTo==user.id))&& 
+            {(role=="student" || role=="staff") && (isLogin && (issue.createdBy._id==user.id || issue.assignedTo==user.id))&& 
             <Link to ={`/issues/${issue._id}/chat`}>
                 chat on this issue
             </Link>}
@@ -130,7 +113,7 @@ export default function IssueCard({ issue, setIssues, staff }) {
                     issueId={issue._id}
                     onSuccess={() => {
                         // re-fetch issues OR update local state
-                        fetchIssues();
+                        //fetchIssues();
                     }}
                 />
 
@@ -141,13 +124,13 @@ export default function IssueCard({ issue, setIssues, staff }) {
 }
 
 
-function StatusBadge({ status }) {
+export const StatusBadge=({ status })=> {
     const colors = {
         Received: "bg-gray-300 text-gray-800",
-        Assigned: "bg-blue-200 text-blue-800",
-        'In Progress': "bg-yellow-200 text-yellow-800",
-        Resolved: "bg-green-200 text-green-800",
-        Closed: "bg-red-300 text-red-800"
+        assigned: "bg-blue-200 text-blue-800",
+        'in-progress': "bg-yellow-200 text-yellow-800",
+        resolved: "bg-green-200 text-green-800",
+        closed: "bg-red-300 text-red-800"
     };
 
     return (

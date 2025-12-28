@@ -61,24 +61,42 @@ export default function IssueSearch() {
   const [query, setQuery] = useState("");
   const [reportId, setReportId] = useState("");
   const [isSearch, setIsSearch] = useState(false);
-  const[issues,setIssues] = useState(mockIssues);
+  const[issues,setIssues] = useState();
   const[filteredIssue,setFilteredIssue] =useState() ;
   const[staff,setStaff] = useState(mockStaff);
-
 
   const handleSearch = async (e) => {
     if (!query) return;
     setReportId(query);
     setQuery("");
     console.log("reportId",query)
-    const filtered = issues.find(issue=>issue._id==query);
-    setFilteredIssue(filtered);
+    await fetchIssue();
+    console.log("issues",issues);
     setIsSearch(true);
   };
-  // useEffect(async()=>{
-  //   //await fetch("http://localhost:5000/issues").then(res=>res.json()).then(data=>console.log("fetched date",data))
-  //   setIssues(mockIssues);
-  // },[])
+    const fetchIssue  = async()=>{
+    const token = localStorage.getItem("token");
+    if(!token) return
+    try {
+      const res = await fetch(`http://localhost:5000/issues/${String(query)}`,
+        {
+          method:"GET",
+          headers:{
+            "Authorization":`Bearer ${token}`,
+            "Content-Type":"application/json"
+          }
+        }
+      )
+      if(!res.ok){
+        throw new Error(`Error ${res.status}: ${res.statusText}`);
+      }
+      const data  = await res.json();
+      console.log("fetched issues",data);
+      setIssues(data);
+    } catch (error) {
+      console.log("failed to fetch issue",error);
+    }
+    }
   return (
     <div className="p-6 h-fit w-screen  bg-linear-to-br from-cyan-400 via-purple-500 to-pink-500 text-white">
       <div className="flex gap-2 mb-4">
@@ -96,7 +114,7 @@ export default function IssueSearch() {
         </button>
       </div>
       {isSearch && <>
-        <IssueCard issue={filteredIssue} setIssues={setIssues} staff={staff}/>
+        <IssueCard issue={issues} setIssues={setIssues} staff={staff}/>
       </>
       }
     </div>

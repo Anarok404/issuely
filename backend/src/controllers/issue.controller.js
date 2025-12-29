@@ -73,6 +73,18 @@ export const getMyIssues = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch issues" });
   }
 };
+export const getAssingedIssues = async (req, res) => {
+  try {
+    const issues = await Issue.find({ assignedTo: req.user.id }).sort({
+      createdAt: -1,
+    });
+
+    res.json(issues);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch issues" });
+  }
+};
 /* GET ALL ISSUES (ADMIN) */
 export const getAllIssues = async (req, res) => {
   try {

@@ -31,6 +31,7 @@ app.use(passport.initialize());
 app.use("/auth", authRoutes);
 app.use("/issues", verifyAccessToken, issueRoutes);
 app.use("/issues", verifyAccessToken, messageRoutes);
+
 /* ---------- HEALTH CHECK ---------- */
 app.get("/", (req, res) => {
   res.send("API is running");

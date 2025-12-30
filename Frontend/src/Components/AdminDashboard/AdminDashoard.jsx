@@ -3,84 +3,6 @@ import { Link } from "react-router-dom";
 import AssignIssue from "./AssignIssue";
 import IssueCard from "../Issue/IssueCard";
 
-/////////********* testing **********/
-
-const mockStaff = [
-  {
-    _id: "s1",
-    name: "Rahul Sharma",
-    role: "Staff",
-    department: "Maintenance",
-  },
-  {
-    _id: "s2",
-    name: "Anjali Verma",
-    role: "Staff",
-    department: "IT",
-  },
-  {
-    _id: "s3",
-    name: "Amit Kumar",
-    role: "Staff",
-    department: "Electrical",
-  },
-];
-
-const mockIssues = [
-  {
-    _id: "i1",
-    description: "Water leakage in Room 204",
-    type: "Plumbing",
-    location: "Block A - Room 204",
-    urgency: "High",
-    status: "Open",
-    assignedTo: null,
-    createdAt: "2025-02-20",
-  },
-  {
-    _id: "i2",
-    description: "Projector not working",
-    type: "IT",
-    location: "Seminar Hall",
-    urgency: "Medium",
-    status: "Assigned",
-    assignedTo: "s2",
-    createdAt: "2025-02-19",
-  },
-  {
-    _id: "i3",
-    description: "Broken switch board",
-    type: "Electrical",
-    location: "Lab 3",
-    urgency: "Low",
-    status: "In Progress",
-    assignedTo: "s3",
-    createdAt: "2025-02-18",
-  },
-];
-  const testSample = [
-    {
-      _id: "ISSUE-101",
-      type: "Electrical",
-      priority: "High",
-      location: "Block A - Room 203",
-      date: "2025-02-12",
-      status: "Closed",
-      assignedTo: "s2",
-    },
-    {
-      _id: "ISSUE-102",
-      type: "Plumbing",
-      priority: "Medium",
-      location: "Hostel - Floor 1",
-      date: "2025-02-11",
-      status: "Assigned",
-      assignedTo: null,
-    },
-  ];
-
-
-
 export default function AdminDashboard() {
     const [issues, setIssues] = useState([]);
     const [staff, setStaff] = useState([]);
@@ -91,23 +13,53 @@ export default function AdminDashboard() {
     });
 
     useEffect(() => {
-        // const fetchIssues = async () => {
-        //     await fetch("/issues")
-        //     .then(res=>res.json())
-        //     .then(setIssues)
-        // };
-        // const fetchStaff = async()=>{
-        //     await fetch("/staff")
-        //     .then(res=>res.json())
-        //     .then(setStaff)
-        // }
-        setIssues(testSample);
-        setStaff(mockStaff);
+      const fetchIssues = async()=>{
+        const token = localStorage.getItem("token");
+        if(!token) return
+       try {
+         const res = await fetch("http://localhost:5000/issues/lead/getall",
+           {
+             method:"GET",
+             headers:{
+               "Authorization":`Bearer ${token}`,
+               "Content-Type":"application/json"
+             }
+           }
+         )
+         if(!res.ok) throw new Error(`Error${res.status}:${res.statusText}`);
+         const issue = await res.json();
+         setIssues(issue);
+       } catch (error) {
+        console.log("Error in fetching staff",error)
+       }
+      }
+      const fetchStaff = async()=>{
+        const token = localStorage.getItem("token");
+        if(!token) return;
+        try {
+          const res = await fetch("http://localhost:5000/lead/getstaff",
+            {
+              method:"GET",
+              headers:{
+                "Authorization":`Bearer ${token}`,
+                "Content-Type":"application/json"
+              }
+            }
+          )
+          if(!res.ok) throw new Error(`Error ${res.status}:${res.statusText}`)
+          const staff = await res.json();
+          setStaff(staff);
+        } catch (error) {
+          console.log("Error in fetching staff");
+        }
+      }
+      fetchIssues();
+      fetchStaff()
     }, []);
 
     const filteredIssues = issues.filter(issues =>
         (!filters.status || issues.status === filters.status) &&
-        (!filters.location || issues.location.includes(filters.location)) &&
+        (!filters.location || issues.location.name.includes(filters.location)) &&
         (!filters.priority || issues.priority === filters.priority) 
        
     );
@@ -124,7 +76,7 @@ export default function AdminDashboard() {
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredIssues.map(issue => (
-          <IssueCard key={issue.issueId} issue={issue} setIssues ={setIssues} staff={staff}/>
+          <IssueCard key={issue._id} issue={issue} setIssues ={setIssues} staff={staff}/>
         ))}
       </div>
 
@@ -148,9 +100,9 @@ function IssueFilters({ filters, setFilters }) {
         }
       >
         <option value="">All Priorities</option>
-        <option>High</option>
-        <option>Medium</option>
-        <option>Low</option>
+        <option value = "high">High</option>
+        <option value="meduim">Medium</option>
+        <option value ="low">Low</option>
       </select>
 
       <select
@@ -160,10 +112,10 @@ function IssueFilters({ filters, setFilters }) {
         }
       >
         <option value="">All Status</option>
-        <option>Received</option>
-        <option>Assigned</option>
-        <option>In Progress</option>
-        <option>Resolved</option>
+        <option value= "received">Received</option>
+        <option value = "assigned">Assigned</option>
+        <option value = "in-progress">In Progress</option>
+        <option value = "resolved">Resolved</option>
       </select>
       <input
         type="text"

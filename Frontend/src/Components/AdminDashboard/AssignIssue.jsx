@@ -1,47 +1,9 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import { Link } from "react-router-dom";
 
-
-///////////////////////////////Testing*************************************
-
-const mockStaff = [
-    { id: "s1", name: "Rahul Sharma", department: "IT" },
-    { id: "s2", name: "Anjali Verma", department: "Electrical" },
-    { id: "s3", name: "Amit Kumar", department: "Maintenance" },
-    { id: "s4", name: "Neha Singh", department: "IT" },
-];
-
-const mockIssues = [
-    {
-        id: "ISS-101",
-        type: "Projector not working",
-        location: "Seminar Hall",
-        priority: "High",
-        status: "Open",
-        assignedTo: null,
-    },
-    {
-        id: "ISS-102",
-        type: "Water leakage",
-        location: "Block A",
-        priority: "Medium",
-        status: "Open",
-        assignedTo: null,
-    },
-    {
-        id: "ISS-103",
-        type: "Water leakage",
-        location: "Library 2nd Floor",
-        priority: "Medium",
-        status: "Open",
-        assignedTo: null,
-    },
-];
-/////////////////////////////////////////////////////////////////
-
 export default function AssignIssuesPage() {
-    const [issues, setIssues] = useState(mockIssues);
-    const [staff, setStaff] = useState(mockStaff);
+    const [issues, setIssues] = useState([]);
+    const [staff, setStaff] = useState([]);
     const [selectedIssue, setSelectedIssue] = useState(null);
     const [search, setSearch] = useState("");
     const [department, setDepartment] = useState("");
@@ -54,19 +16,66 @@ export default function AssignIssuesPage() {
         (!department || s.department === department) &&
         s.name.toLowerCase().includes(search.toLowerCase())
     );
+    useEffect(() => {
+        const fetchIssues = async () => {
+            const token = localStorage.getItem("token")
+            if (!token) return;
+            try {
+                const res = await fetch("http://localhost:5000/issues/lead/getall",
+                    {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                )
+                if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`)
+                const issue = await res.json();
+                console.log("issue in assigned issue admin", issue);
+                setIssues(issue);
+                const unasignedIssue = issue.filter(i => i.assignedTo === null);
+                console.log("unassigned issues", unasignedIssue);
+            } catch (error) {
+                console.log("Error while fetching issue in admin side", error);
+            }
+        }
+        const fetchStaff = async () => {
+            const token = localStorage.getItem("token");
+            try {
+                const res = await fetch("http://localhost:5000/lead/getstaff",
+                    {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+                if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+                const staff = await res.json();
+                console.log("staff in assigned issue", staff);
+                setStaff(staff);
+            } catch (error) {
+                console.log("Error in fetching staff", error);
+            }
+        }
+        fetchStaff();
+        fetchIssues();
+    }, [])
 
-    const assignIssue = async (staffId) => {
+       const assignIssue = async (staffId) => {
         const token = localStorage.getItem("token");
 
         const res = await fetch(
-            `/issues/${selectedIssue.id}/assign`,
+            `http://localhost:5000/issues/lead/assign`,
             {
-                method: "PATCH",
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ staffId }),
+                body: JSON.stringify({ handler:staffId ,id:selectedIssue._id}),
             }
         );
 
@@ -78,7 +87,7 @@ export default function AssignIssuesPage() {
         const updatedIssue = await res.json();
 
         setIssues(prev =>
-            prev.map(i => (i.id === updatedIssue.id ? updatedIssue : i))
+            prev.map(i => (i._id === updatedIssue._id ? updatedIssue : i))
         );
         setSelectedIssue(null);
     };
@@ -101,16 +110,16 @@ export default function AssignIssuesPage() {
                     {unassignedIssues.length == 0 && <p className="font-semibold">No unassigned issue is available</p>}
                     {unassignedIssues.lenght != 0 && unassignedIssues.map(issue => (
                         <div
-                            key={issue.id}
-                            className={`p-3 mb-3 rounded border cursor-pointer ${selectedIssue?.id === issue.id
+                            key={issue._id}
+                            className={`p-3 mb-3 rounded border cursor-pointer ${selectedIssue?._id === issue._id
                                 ? "border-indigo-500 bg-indigo-50"
                                 : "border-gray-200"
                                 }`}
                             onClick={() => setSelectedIssue(issue)}
                         >
-                            <p className="font-semibold">{issue.id}</p>
-                            <p className="text-sm">{issue.type}</p>
-                            <p className="text-xs text-gray-500">{issue.location}</p>
+                            <p className="font-semibold">ID: <span className="text-red-500">{issue._id}</span></p>
+                            <p className="text-sm">{issue.issueType}</p>
+                            <p className="text-xs text-gray-500">{issue.location.name}</p>
                             <span className="text-xs text-red-600">
                                 {issue.priority}
                             </span>
@@ -150,7 +159,7 @@ export default function AssignIssuesPage() {
                     {selectedIssue ? (
                         filteredStaff.map(s => (
                             <div
-                                key={s.id}
+                                key={s._id}
                                 className="flex justify-between items-center border p-3 rounded mb-2"
                             >
                                 <div>
@@ -161,7 +170,7 @@ export default function AssignIssuesPage() {
                                 </div>
 
                                 <button
-                                    onClick={() => assignIssue(s.id)}
+                                    onClick={() => assignIssue(s._id)}
                                     className="bg-green-400 text-white px-3 py-1 rounded hover:bg-green-600 cursor-pointer"
                                 >
                                     Assign

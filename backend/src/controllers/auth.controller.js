@@ -5,6 +5,8 @@ import {
   generateRefreshToken,
 } from "../utils/jwt.util.js";
 import jwt from "jsonwebtoken";
+import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
 
 export const refreshAccessToken = async (req, res) => {
   try {
@@ -81,13 +83,18 @@ export const signup = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const { id, name, email, password, role, contact, department } = req.body;
-    let updateData = {
-      name,
-      email,
-      role: role || "student",
-      contact: contact,
-      department: department,
-    };
+    if (!id) return res.status(400).json({ message: "User id required" });
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
+    if (contact) updateData.contact = contact;
+    if (department) updateData.department = department;
+
     if (password) {
       if (password.length < 8) {
         return res
@@ -96,12 +103,43 @@ export const update = async (req, res) => {
       }
       updateData.password = await hashPassword(password);
     }
-    await User.updateOne({ _id: id }, updateData);
 
-    res.status(200).json({ message: "Update successful" });
+    if (req.file) {
+      const uploadFromBuffer = () =>
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "profile" },
+            (error, result) => {
+              if (result) resolve(result);
+              else reject(error);
+            }
+          );
+
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+
+      const result = await uploadFromBuffer();
+
+      if (user.picturePublicId) {
+        try {
+          await cloudinary.uploader.destroy(user.picturePublicId);
+        } catch (e) {
+          console.warn("Failed to remove previous profile image", e);
+        }
+      }
+
+      updateData.picture = result.secure_url;
+      updateData.picturePublicId = result.public_id;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    res.status(200).json({ message: "Update successful", user: updatedUser });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Failed to update routes" });
+    res.status(500).json({ message: "Failed to update user" });
   }
 };
 export const login = async (req, res) => {

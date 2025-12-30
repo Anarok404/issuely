@@ -4,6 +4,13 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
     },
+    picture: {
+      type: String, // Cloudinary URL
+    },
+
+    picturePublicId: {
+      type: String, // Cloudinary public_id
+    },
     email: {
       type: String,
       required: true,

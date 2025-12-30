@@ -9,14 +9,14 @@ import {
   oauthSuccess,
 } from "../controllers/auth.controller.js";
 import { verifyAccessToken } from "../middlewares/auth.middleware.js";
-
+import upload from "../middlewares/upload.middleware.js";
 const router = express.Router();
 
 router.post("/signup", signup);
 router.post("/login", login);
 router.post("/refresh", refreshAccessToken);
 router.post("/logout", verifyAccessToken, logout);
-router.post("/update", verifyAccessToken, update);
+router.post("/update", verifyAccessToken, upload.single("picture"), update);
 /* GOOGLE */
 router.get(
   "/google",

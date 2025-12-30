@@ -17,13 +17,13 @@ export default function IssueCard({ issue, setIssues, staff }) {
           try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch(`http://localhost:5000/issues/${issueId}`, {
-              method: "PUT",
+            const response = await fetch(`http://localhost:5000/issues/admin/update`, {
+              method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-              body: JSON.stringify({ status: newStatus }),
+              body: JSON.stringify({ id:issueId,status: newStatus }),
             });
 
             if (!response.ok) {
@@ -32,18 +32,19 @@ export default function IssueCard({ issue, setIssues, staff }) {
 
             const updatedIssue = await response.json();
             console.log("updated issue in issue card",updatedIssue);
-            setIssues(updatedIssue);
+            setIssues(previssues=>previssues.map(i=>i._id==issueId?updatedIssue:i));
           } catch (error) {
             console.error("Error updating issue:", error);
             alert("Unable to update issue status");
           }
    }
    let filteredStaff;
-   if(typeof(staff)!=Array){
+   if(!Array.isArray(staff)){
     filteredStaff = staff
    }else  {
     filteredStaff = staff.find(s => s._id == issue.assignedTo);
    }
+   console.log("filteredStaff",filteredStaff)
 
     return (
         <div
@@ -62,17 +63,17 @@ export default function IssueCard({ issue, setIssues, staff }) {
 
 
             <span
-                className={`inline-block mt-3 px-2 py-1 text-xs rounded ${issue.urgency === "high"
+                className={`inline-block mt-3 px-2 py-1 text-xs rounded ${issue.priority === "high"
                     ? "bg-red-100 text-red-600"
-                    : issue.urgency === "medium"
+                    : issue.priority === "medium"
                         ? "bg-yellow-100 text-yellow-700"
                         : "bg-green-100 text-green-600"
                     }`}
             >
-                {issue.urgency}
+                {issue.priority}
             </span>
 
-            {(role != "student" && (isLogin && (issue.assignedTo==user.id || role=="lead"))) &&
+            {(role != "student" && (isLogin && ((issue.assignedTo!=null)&& (issue.assignedTo==user.id  || role=="lead")))) &&
                 <>
                     <div>
                         <button

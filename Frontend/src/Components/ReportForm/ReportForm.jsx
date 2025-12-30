@@ -48,7 +48,7 @@ export default function ReportIssue() {
       formData.append("picture", file);
     }
     const token = localStorage.getItem('token');
-    const res = await fetch("http://localhost:5000/issues/", {
+    const res = await fetch("http://localhost:5000/issues/student", {
       method: "POST",
       headers: { "Authorization": `Bearer ${token}`},
       body: formData,
@@ -57,7 +57,7 @@ export default function ReportIssue() {
     const data = await res.json();
     if(!res.ok) alert(data.message);
     console.log(data)
-    navigate("");
+    navigate("/");
   };
 
 

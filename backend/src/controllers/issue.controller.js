@@ -195,7 +195,7 @@ export const deleteIssue = async (req, res) => {
 /* ASSIGN ISSUE(LEAD) */
 export const assignIssue = async (req, res) => {
   try {
-    const issue = await Issue.findById(req.params.id);
+    const issue = await Issue.findById(req.body.id);
     if (!issue) return res.status(404).json({ message: "Issue not found" });
     const { handler } = req.body;
     issue.assignedTo = handler;

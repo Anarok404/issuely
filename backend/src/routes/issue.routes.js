@@ -18,11 +18,11 @@ import {
 } from "../controllers/issue.controller.js";
 
 const router = express.Router();
-
+//OPEN FOR ALL
+router.get("/:id", getIssueById);
 /* STUDENT */
 router.post("/student/", requireStudent, upload.single("picture"), createIssue);
 router.get("/student/my", requireStudent, getMyIssues);
-router.get("/student/:id", requireStudent, getIssueById);
 
 /*STAFF*/
 router.get("/staff/my", requireStaff, getAssignedIssues);

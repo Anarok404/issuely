@@ -4,6 +4,7 @@ import {
   requireStaff,
   requireLead,
   requireStudent,
+  requireAdmin,
 } from "../middlewares/role.middleware.js";
 
 import {
@@ -29,7 +30,14 @@ router.get("/staff/my", requireStaff, getAssignedIssues);
 
 /*LEAD*/
 router.get("/lead/getall", requireLead, getAllIssues);
-router.get("/lead/update", requireLead, updateIssue);
 router.get("/lead/delete", requireLead, deleteIssue);
 router.post("/lead/assign", requireLead, assignIssue);
+
+/*ADMIN*/
+router.post(
+  "/admin/update",
+  requireAdmin,
+  upload.single("picture"),
+  updateIssue
+);
 export default router;

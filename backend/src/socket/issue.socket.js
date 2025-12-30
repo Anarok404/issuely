@@ -6,6 +6,7 @@ import Message from "../models/message.model.js";
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: { origin: "*" },
+    credentials: true,
   });
 
   // Socket authentication

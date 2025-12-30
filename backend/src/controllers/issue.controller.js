@@ -116,7 +116,7 @@ export const getIssueById = async (req, res) => {
 /* UPDATE ISSUE (ADMIN) */
 export const updateIssue = async (req, res) => {
   try {
-    const issue = await Issue.findById(req.params.id);
+    const issue = await Issue.findById(req.body.id);
     if (!issue) return res.status(404).json({ message: "Issue not found" });
 
     if (req.file) {

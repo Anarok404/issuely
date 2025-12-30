@@ -19,4 +19,10 @@ export const requireStudent = (req, res, next) => {
 
   next();
 };
+export const requireAdmin = (req, res, next) => {
+  if (req.user.role !== "staff" || req.user.role !== "lead") {
+    return res.status(403).json({ message: "Admin access required" });
+  }
 
+  next();
+};

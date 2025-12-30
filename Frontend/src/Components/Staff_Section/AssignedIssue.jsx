@@ -12,7 +12,7 @@ export default function AssignedIssues() {
       const token = localStorage.getItem("token");
       if(!token) return;
       try {
-      const res = await fetch(`http://localhost:5000/issues/`,
+      const res = await fetch(`http://localhost:5000/issues/staff/my`,
         {
           method:"GET",
           headers:{

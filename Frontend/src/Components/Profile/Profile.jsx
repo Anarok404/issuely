@@ -1,4 +1,4 @@
-import React,{ useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import useAuth from "../AuthContext/AuthContextProvider"
 export default function ProfilePage() {
   const [profile, setProfile] = useState({
@@ -7,25 +7,57 @@ export default function ProfilePage() {
     contact: "",
     role: "",
     department: "",
-    password:""
+    password: ""
   });
-  const{user,isLogin} = useAuth();
+  const { user, isLogin ,setUser} = useAuth();
   const [loading, setLoading] = useState(true)
+  const [isUpdate, setUpdate] = useState(false);
 
 
   useEffect(() => {
-    const fetchProfile =  () => {
-      if(isLogin) {
-        console.log("user data in profile page",user);
+    const fetchProfile = () => {
+      if (isLogin) {
+        console.log("user data in profile page", user);
         setProfile(user);
         setLoading(false);
       }
     };
     fetchProfile();
   }, []);
+
   const handleChange = (e) => {
+    e.preventDefault();
+    setUpdate(true);
     setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
+  }
+
+
+
+  const updateProfile = async (e) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const data = { id: user.id, name:profile.name, email:profile.email, password:profile.password, role:profile.role, contact:profile.contact, department:profile.department }
+    try {
+      const res = await fetch("http://localhost:5000/auth/update",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        }
+      )
+      if (!res.ok) throw new Error(`Error:${res.status} ${res.statusText}`)
+      const updatedUser = await res.json();
+      console.log("updated User", updatedUser.user);
+      setProfile(updatedUser.user);
+      setUpdate(false);
+
+    } catch (error) {
+      console.log("Error in update profile", error);
+    }
+  }
 
 
   if (loading) {
@@ -43,16 +75,16 @@ export default function ProfilePage() {
 
 
         {profile.name && (
-          <Field icon="👤" label="name" value={profile?.name} onChange={handleChange} name="name" />
+          <Field icon="👤" label="name" value={profile?.name} onChange={handleChange} name="name" editable={isUpdate} />
         )}
 
         {profile.email && (
-          <Field icon="📧" label="Email" value={profile?.email} onChange={handleChange} name="email" />
+          <Field icon="📧" label="Email" value={profile?.email} onChange={handleChange} name="email" editable={isUpdate}/>
         )}
 
 
         {profile.contact && (
-          <Field icon="📞" label="Contact" value={profile?.contact} onChange={handleChange} name="contact" />
+          <Field icon="📞" label="Contact" value={profile?.contact} onChange={handleChange} name="contact" editable={isUpdate} />
         )}
 
 
@@ -74,15 +106,29 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-         {profile.password && (
-          <Field icon="📞" label="Contact" value={profile?.password} onChange={handleChange} name="password" />
-        )}
+        {!isUpdate &&
+          <button
+            onClick={handleChange}
+            className="w-full mt-6 bg-amber-400 text-black py-2 rounded hover:bg-amber-700 transition hover:rounded-lg cursor-pointer"
+          >
+            Update Profile
+          </button>
+        }
+        {isUpdate &&
+          <button
+            onClick={updateProfile}
+            className="w-full mt-6 bg-green-400 text-black py-2 rounded hover:bg-green-600 transition hover:rounded-lg cursor-pointer"
+          >
+            Save
+          </button>
+        }
       </div>
+
     </div>
   );
 }
 
-function Field({ icon, label, value, onChange, name }) {
+function Field({ icon, label, value, onChange, name, editable }) {
   return (
     <div className="mb-5">
       <label className="text-sm text-gray-600">{label}</label>
@@ -93,8 +139,9 @@ function Field({ icon, label, value, onChange, name }) {
           name={name}
           value={value}
           onChange={onChange}
-          readOnly
-          className="w-full outline-none text-sm"
+          disabled={!editable}
+          className={`w-full outline-none text-sm bg-transparent ${!editable ? "text-gray-500" : "text-black"
+            }`}
         />
       </div>
     </div>

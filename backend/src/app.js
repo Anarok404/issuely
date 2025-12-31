@@ -19,7 +19,8 @@ import {
   requireStaff,
 } from "./middlewares/role.middleware.js";
 import errorHandler from "./middlewares/error.middleware.js";
-import passport from "./config/passport.js";
+import passport from "passport";
+import "./config/passport.js";
 
 const app = express();
 

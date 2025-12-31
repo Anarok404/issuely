@@ -30,7 +30,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 /* security middlewares */
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN.split(",") || true,
+    credentials: true,
+  })
+);
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(limiter);
 app.use(passport.initialize());

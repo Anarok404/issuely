@@ -4,6 +4,6 @@ import { getIssueMessages } from "../controllers/message.controller.js";
 
 const router = express.Router();
 
-router.get("/:issueId/messages", verifyAccessToken, getIssueMessages);
+router.get("/messages/:issueId", verifyAccessToken, getIssueMessages);
 
 export default router;

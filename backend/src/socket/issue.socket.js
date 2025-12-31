@@ -6,7 +6,7 @@ import "dotenv/config";
 
 export const initSocket = (server) => {
   const io = new Server(server, {
-    cors: { origin: "http://localhost:5173", credentials: true },
+    cors: { origin: process.env.CORS_ORIGIN.split(","), credentials: true },
   });
 
   // Socket authentication
@@ -45,6 +45,7 @@ export const initSocket = (server) => {
 
     /* SEND MESSAGE */
     socket.on("send_message", async ({ issueId, text }) => {
+      console.log("message received");
       if (!text?.trim()) return;
 
       const issue = await Issue.findById(issueId);

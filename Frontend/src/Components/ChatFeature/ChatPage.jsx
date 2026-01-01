@@ -2,15 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import useSocket from "../../Context/SocketContext";
 import useAuth from "../AuthContext/AuthContextProvider";
+import InfiniteScroll from "react-infinite-scroll-component";
 export default function IssueChatPage() {
-    //const currentUserId = "user123"; // logged-in user
     const { issueId } = useParams();
     const socket = useSocket();
     const { user } = useAuth();
     const currentUserId = user.id;
     console.log("current userid", currentUserId);
-
-    // const issueId = "ISSUE-101";
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState("");
+    const [hasMore, setHasMore] = useState(true);
+    const [cursor, setCursor] = useState(null);
 
     useEffect(() => {
         if (!socket) return;
@@ -32,11 +34,6 @@ export default function IssueChatPage() {
                     status: "delivered",
                 },
             ]);
-            console.log({
-                msgSender: msg.senderId,
-                currentUserId,
-                equal: String(msg.senderId) === String(currentUserId)
-            });
         };
 
         socket.on("new_message", handleNewMessage);
@@ -61,35 +58,6 @@ export default function IssueChatPage() {
     }, [issueId, socket]);
 
 
-    const [messages, setMessages] = useState([
-        // {
-        //     id: 1,
-        //     senderId: user.id,
-        //     senderName: "You",
-        //     text: "Hello, any update on this issue?",
-        //     time: "10:30 AM",
-        //     status: "seen",
-        // },
-        // {
-        //     id: 2,
-        //     senderId: "staff456",
-        //     senderName: "Maintenance Staff",
-        //     text: "Yes, we are checking it right now.",
-        //     time: "10:32 AM",
-        //     status: "delivered"
-        // },
-        // {
-        //     id: 3,
-        //     senderId: "69492424be2a0087c7dc4881",
-        //     senderName: "You",
-        //     text: "Thanks! Please let me know.",
-        //     time: "10:33 AM",
-        //     status: "sent"
-        // }
-    ]);
-
-    const [input, setInput] = useState("");
-
     const sendMessage = () => {
         if (!input.trim() || !socket) return;
         const data = {
@@ -100,25 +68,53 @@ export default function IssueChatPage() {
         socket.emit("send_message", data);
         setInput("");
 
-        ///////////////////////////Testing*******************************************
-
-        // setMessages((prev) => [
-        //     ...prev,
-        //     {
-        //         id: Date.now(),
-        //         senderId: currentUserId,
-        //         text: input,
-        //         time: new Date().toLocaleTimeString([], {
-        //             hour: "2-digit",
-        //             minute: "2-digit"
-        //         })
-        //     }
-        // ]);
-
     };
+    const fetchMessage = async () => {
+        if (!hasMore) return;
+        const token = localStorage.getItem("token");
+        if (!token) return
+        const url = cursor
+            ? `http://localhost:5000/issues/messages/${issueId}?limit=10&before=${cursor}`
+            : `http://localhost:5000/issues/messages/${issueId}?limit=10`;
+        const res = await fetch(url,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        )
+        if (!res.ok) throw new Error(`Error:${res.status}:${res.statusText}`)
+        const data = await res.json();
+        console.log("fetched message", data);
+        if (data.length == 0) {
+            setHasMore(false);
+            return;
+        }
+        const normalized = data.map((msg) => ({
+            id: msg._id,
+            senderId: String(msg.senderId),
+            text: msg.text,
+            time: new Date(msg.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            }),
+            status: "delivered",
+            createdAt: msg.createdAt,
+        }));
+        setMessages((prev) => [...normalized, ...prev]);
+
+        setCursor(normalized[0].createdAt);
+    }
+    useEffect(() => {
+        fetchMessage();
+    }, [])
+
 
     return (
-        <div className="flex flex-col h-screen bg-gray-100">
+        <div
+            className="flex flex-col h-screen bg-gray-100">
 
             {/* HEADER */}
             <div className="bg-indigo-600 text-white p-4 flex justify-between items-center shadow">
@@ -134,39 +130,52 @@ export default function IssueChatPage() {
             </div>
 
             {/* CHAT BODY */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.map((msg) => {
-                    const isSender = String(msg.senderId) === String(currentUserId);
+            <div
+                id="scrollableDiv"
+                className="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col-reverse">
+                <InfiniteScroll
+                    dataLength={messages.length}
+                    next={fetchMessage}
+                    hasMore={hasMore}
+                    inverse={true}
+                    scrollableTarget="scrollableDiv"
+                 loader={<p className="text-center text-sm">Loading message</p>}
+                >
+                <div className="flex flex-col space-y-3">
+                    {messages.map((msg) => {
+                        const isSender = String(msg.senderId) === String(currentUserId);
 
-                    return (
-                        <div
-                            key={msg.id}
-                            className={`flex ${isSender ? "justify-end" : "justify-start"}`}
-                        >
+                        return (
                             <div
-                                className={`max-w-xs md:max-w-md px-4 py-2 rounded-lg text-sm shadow ${isSender
-                                    ? "bg-indigo-600 text-white rounded-br-none"
-                                    : "bg-white text-gray-800 rounded-bl-none"
-                                    }`}
+                                key={msg._id}
+                                className={`flex mb-5 ${isSender ? "justify-end" : "justify-start"}`}
                             >
-                                <p>{msg.text} {isSender &&
-                                    <span className="text-xs ml-2">
-                                        {msg.status === "sent" && "✔"}
-                                        {msg.status === "delivered" && "✔✔"}
-                                        {msg.status === "seen" && (
-                                            <span className="text-blue-500">✔✔</span>
-                                        )}
+                                <div
+                                    className={`max-w-xs md:max-w-md px-4 py-2 space-y-3 rounded-lg text-sm shadow ${isSender
+                                        ? "bg-indigo-600 text-white rounded-br-none"
+                                        : "bg-white text-gray-800 rounded-bl-none"
+                                        }`}
+                                >
+                                    <p>{msg.text} {isSender &&
+                                        <span className="text-xs ml-2">
+                                            {msg.status === "sent" && "✔"}
+                                            {msg.status === "delivered" && "✔✔"}
+                                            {msg.status === "seen" && (
+                                                <span className="text-blue-500">✔✔</span>
+                                            )}
+                                        </span>
+                                    }
+                                    </p>
+                                    <span className="block text-xs mt-1 opacity-70 text-right">
+                                        {msg.time}
                                     </span>
-                                }
-                                </p>
-                                <span className="block text-xs mt-1 opacity-70 text-right">
-                                    {msg.time}
-                                </span>
 
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                    </div>
+                </InfiniteScroll>
                 <div />
             </div>
 

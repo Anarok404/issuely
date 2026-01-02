@@ -11,7 +11,10 @@ export default function IssueCard({ issue, setIssues, staff }) {
     console.log("issue in card", issue);
     console.log("user in issue card",user);
     const [isUpdate, setIsUpdate] = useState(false);
-    const[reports,setReports] = useState(issue);
+    const[isExpanded,setIsExpanded] = useState(false);
+    const handleSize = async()=>{
+        setIsExpanded(!isExpanded);
+    }
 
    const updateIssueStatus = async (issueId, newStatus, setIssues) => {
           try {
@@ -60,7 +63,16 @@ export default function IssueCard({ issue, setIssues, staff }) {
             <p className="text-gray-700 mt-2">{issue.type}</p>
             <p className="text-sm text-gray-500">{issue.location.name}</p>
             <p className="text-sm text-gray-500">Assigned to:<span className="text-red-400 font-bold">{filteredStaff ? filteredStaff.name : "Not assigned yet"}</span></p>
-
+            <p className="text-sm text-gray-500"><span className="text-red-400 text-lg">Description:  </span>{issue.description}</p>
+            <span className="text-red-500 text-lg">IssueImage: </span>
+            <div 
+                style={{width:isExpanded?"auto":"100px",height:isExpanded?"auto":"100px"}}
+                onClick={handleSize}
+            >
+            <img src={issue.picture} alt="issueImage" 
+                style={{width:isExpanded?"100%":"100%",height:isExpanded?"100%":"100%",objectFit:"contain"}}
+            />
+            </div>
 
             <span
                 className={`inline-block mt-3 px-2 py-1 text-xs rounded ${issue.priority === "high"
@@ -105,10 +117,12 @@ export default function IssueCard({ issue, setIssues, staff }) {
                     }
                 </>
             }
+            <div>
             {(role=="student" || role=="staff") && (isLogin && (issue.createdBy._id==user.id || issue.assignedTo==user.id))&& 
             <Link to ={`/issues/${issue._id}/chat`}>
                 chat on this issue
             </Link>}
+            </div>
             {(role == "student" && (isLogin && (issue.status == 'Closed' || issue.status == 'Resolved'))) &&
                 <FeedbackForm
                     issueId={issue._id}
@@ -127,7 +141,7 @@ export default function IssueCard({ issue, setIssues, staff }) {
 
 export const StatusBadge=({ status })=> {
     const colors = {
-        Received: "bg-gray-300 text-gray-800",
+        received: "bg-gray-300 text-gray-800",
         assigned: "bg-blue-200 text-blue-800",
         'in-progress': "bg-yellow-200 text-yellow-800",
         resolved: "bg-green-200 text-green-800",
